@@ -1,288 +1,138 @@
-🧠 AI-Based Smart Autofocus & Dynamic Subject Tracking System
+# BlurGoBrr
 
-Faustian_for{loop}
+AI-based smart autofocus and dynamic subject tracking for videos.
 
-🚀 Overview
+<p align="center">
+  <img src="assets/blurgobrr-demo.gif" alt="BlurGoBrr demo showing click-to-track autofocus and background blur" width="720" />
+</p>
 
-This project implements an AI-powered Smart Autofocus & Dynamic Subject Tracking System that allows a user to:
+BlurGoBrr lets a user click any subject in a video, lock focus onto it, keep that subject sharp across frames, and blur the background for a cinematic depth-of-field effect. The goal is simple: make autofocus feel interactive, object-aware, and usable beyond face-only detection.
 
-Click on any object in a video
+## What It Does
 
-Track the selected subject across frames
+- Click any visible object in a video and select it as the focus target
+- Track the selected subject across frames using persistent identity tracking
+- Keep the target sharp while applying blur to the rest of the frame
+- Switch focus by clicking another object
+- Preview frames, play/pause video, render output, and download the final result
 
-Keep the selected subject sharp
+## Why It Matters
 
-Apply background blur to all other objects
+Traditional autofocus systems usually depend on faces, center-frame assumptions, or predefined subjects. BlurGoBrr explores a more flexible workflow: the user decides what matters, and the system follows that object through motion, camera changes, and partial occlusion.
 
-Switch focus instantly by clicking another subject
+This is useful for:
 
-Render a cinematic output video
+- Sports clips and racing footage
+- Cinematic video editing
+- Content creation tools
+- Smart camera autofocus systems
+- Surveillance and analytics workflows
+- Interactive computer vision demos
 
-The system combines modern computer vision techniques such as object detection, multi-object tracking, and segmentation-based compositing to deliver a real-time interactive experience.
+## System Architecture
 
-🎯 Problem Statement
-Traditional autofocus systems focus only on faces or predefined objects.
-Our goal was to build a system that:
-_________________________________________
-1. Allows arbitrary object selection
-
-2. Maintains subject identity across frames
-
-3. Handles occlusion and motion
-
-4. Applies high-quality segmentation-based blur
-
-5. Runs on-device using GPU acceleration
-_________________________________________________
-🏗️ System Architecture
-1️⃣ Vision Layer (AI Engine)
-
-.YOLOv8 (Segmentation variant) for object detection and mask generation
-
-.ByteTrack for persistent multi-object tracking
-
-.Pixel-level segmentation for accurate subject isolation
-
-.Selective Gaussian blur compositing for cinematic focus
-
-2️⃣ Backend Layer (FastAPI)
-
-Handles video uploads
-
-Manages per-video tracking state
-
-Exposes REST API endpoints
-
-Uses GPU acceleration (RTX 4060) ##NOTE : WINDOWS   FIREWALL MIGHT INTERFARE DUE TO IT BEING A PRIVATE NETWORK
-
-3️⃣ Frontend Layer (Simple Html with websockets)
-
-.Upload interface
-
-.Frame preview rendering
-
-.Click-to-select interaction
-
-.Play/Pause controls
-
-.Render & download functionality
-
-🧠 Core Technical Concepts
-____________________________________________________
-🔹 Object Detection (YOLOv8)
-
-A one-stage real-time detector that predicts bounding boxes and segmentation masks in a single forward pass.
-
-🔹 Multi-Object Tracking (ByteTrack)
-
-Maintains consistent identity (track_id) across frames, ensuring that once a user selects an object, the same physical object continues to be tracked.
-
-🔹 Click-to-Identity Lock
-
-When the user clicks:
-
-We determine which bounding box contains the click
-
-We lock its track_id
-
-All future frames follow this identity
-
-🔹 Segmentation-Based Blur
-
-For each frame:
-
-1. Extract subject mask
-    |
-    |
-2. Blur entire frame
-    |
-    |
-3. Composite sharp subject over blurred background
-     |
-     |
-4. Feather edges for smooth transitions
-____________________________________________________
-✨ Key Features
-
-..Real-time object selection
-
-..Persistent identity tracking
-
-..Segmentation-based blur (not bounding-box blur)
-
-..Instant focus switching
-
-..GPU acceleration
-
-..Modular architecture
-
-..Scalable backend API
-
-🎥 Live Camera Capability (V2)
-
-Our system architecture supports real-time live camera blur.
-
-We have already implemented the capability to:
-
-Capture live webcam feed
-
-Perform detection + tracking in real time
-
-Apply segmentation-based background blur
-
-However, in this hackathon version, we focused on uploaded video processing for stability and evaluation clarity.
-_________________________________________________________________________________________________
-In Version 2, we plan to:
-
-Integrate live webcam streaming into the frontend
-
-Enable real-time autofocus in browser
-
-Support WebRTC-based streaming
-
-Deploy optimized streaming endpoints
-________________________________________________________________________________
-🖥️ Hardware Requirements
-
-NVIDIA GPU recommended (RTX 4060 used in development)
-
-CUDA-compatible PyTorch
-
-8GB+ RAM recommended
-
-📦 Installation & Setup Guide
-1️⃣ Clone the Repository
-```  bash
-git clone https://github.com/your-username/your-repo.git
-cd your-repo
-2️⃣ Create Virtual Environment
-Windows
-python -m venv venv
-venv\Scripts\activate
-Mac/Linux
-python3 -m venv venv
-source venv/bin/activate
-3️⃣ Install Dependencies
-pip install -r requirements.txt
-
-If running on GPU, ensure CUDA-enabled PyTorch is installed:
-
-Visit:
-https://pytorch.org/get-started/locally/
-
-4️⃣ Run Backend (FastAPI)
-uvicorn api_ml:app --host 0.0.0.0 --port 8000
-````
-Check:
-
+```mermaid
+flowchart LR
+    A[Video Upload] --> B[Frame Extraction]
+    B --> C[YOLOv8 Detection + Segmentation]
+    C --> D[ByteTrack Identity Tracking]
+    D --> E[Click Target Mapping]
+    E --> F[Mask-Based Subject Isolation]
+    F --> G[Background Blur Compositing]
+    G --> H[Preview + Rendered Output]
 ```
+
+## Core Pipeline
+
+| Layer | Role |
+| --- | --- |
+| Vision engine | Detects objects, generates masks, tracks identities, and composites blur. |
+| Backend | Handles uploads, frame state, target selection, rendering, and download endpoints. |
+| Frontend | Provides upload UI, frame preview, click-to-select interaction, playback, and render controls. |
+
+## Technical Highlights
+
+- YOLOv8 segmentation-style object detection and mask generation
+- ByteTrack-style persistent multi-object tracking
+- Click-to-identity locking so the selected physical object remains the target
+- Segmentation-based blur instead of rough bounding-box blur
+- OpenCV frame processing and Gaussian blur compositing
+- FastAPI-style backend API for upload, preview, selection, reset, render, and download
+- Designed for GPU acceleration during heavier inference workloads
+
+## API Shape
+
+```text
+POST /upload      Upload a video
+GET  /frame       Fetch preview/current frame
+POST /select      Select target object from click coordinates
+POST /reset       Clear target focus
+POST /render      Render output video
+GET  /download    Download final rendered video
+```
+
+## Local Setup
+
+```bash
+git clone https://github.com/scienstien/BlurGoBrr.git
+cd BlurGoBrr
+python -m venv venv
+```
+
+On Windows:
+
+```powershell
+venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+Run the backend:
+
+```bash
+uvicorn api_ml:app --host 0.0.0.0 --port 8000
+```
+
+Open the frontend from the `frontend/` folder or serve it with your preferred local static server.
+
+Useful checks:
+
+```text
 http://localhost:8000/health
 http://localhost:8000/docs
 ```
-5️⃣ Run Frontend (Next.js)
 
-Navigate to frontend folder:
+## Project Structure
 
+```text
+BlurGoBrr/
+├── api_ml.py              # Backend API entrypoint
+├── main.py                # Local/OpenCV test flow
+├── src/                   # Focus engine and processing logic
+├── frontend/              # Browser UI
+├── scripts/               # Setup/deployment helpers
+├── assets/                # README/demo assets
+├── requirements.txt
+├── Dockerfile
+└── docker-compose.yml
 ```
-cd Pragyaan_khel/frontend
-```
-Open:
 
-http://localhost:3000
-🌐 Network Setup (If Using Multiple Laptops)
+## Challenges Solved
 
-If frontend and backend are on different machines:
+- Mapping click coordinates correctly after frame resizing
+- Preserving identity across motion and occlusion
+- Avoiding box-shaped blur artifacts by using segmentation masks
+- Keeping preview interactions responsive while processing video frames
+- Separating backend state, model inference, and frontend controls cleanly
 
-Find backend laptop IP:
+## Roadmap
 
-ipconfig
+- Live webcam mode
+- WebRTC streaming support
+- Depth-aware blur
+- Mobile-friendly UI
+- Edge-device optimization
+- Cloud deployment with GPU-backed workers
 
-Use:
+## Built With
 
-http://<your-ip>:8000
-
-instead of localhost
-
-📡 API Endpoints
-```
-Upload Video
-POST /upload
-Get Preview Frame
-GET /frame
-Select Target
-POST /select
-Reset Focus
-POST /reset
-Render Output
-POST /render
-Download Final Video
-GET /download
-````
-🧪 Running Locally Without Frontend
-
-You can test the model using:
-
-python main.py
-
-This opens a local OpenCV window for:
-
-Click-to-select
-
-Frame stepping
-
-Blur preview
-
-⚙️ Project Structure
-src/
-  focus_engine.py
-api_ml.py
-main.py
-models/
-runs/
-TeamName_NextGenHackathon/
-🧩 Challenges Faced
-
-Click coordinate mismatch due to resizing
-
-Frame seeking latency in OpenCV
-
-Maintaining tracking identity across occlusion
-
-Optimizing blur performance for real-time preview
-
-🌍 Real-World Applications
-
-1.Smart camera autofocus systems
-
-2.Video conferencing tools
-
-3.Cinematic video editing
-
-4.Content creation platforms
-
-5.Surveillance analytics
-
-6.Sports tracking systems like Cricket and F1
-
-🚀 Future Improvements
->>>>>__________________________________<<<<
-Live webcam integration
-
-WebRTC streaming
-
-Depth-aware blur
-
-Mobile deployment
-
-Edge device optimization
-
-Cloud deployment
-
-Due to lack of infra we couldnt deploy it to aws this time it was asking 50GB worth of compute
->>>>>__________________________________<<<<
-
-🏁 Conclusion
-______________________________________
-This project demonstrates how modern computer vision techniques can be integrated into a scalable, interactive, and real-world application for dynamic autofocus and subject tracking.
-
-Our modular design ensures extensibility for live camera streaming, edge deployment, and production-scale integration.
+Python, OpenCV, FastAPI, YOLO-style segmentation, ByteTrack-style tracking, HTML/CSS/JavaScript, Docker.
